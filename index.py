@@ -40,7 +40,7 @@ with open(files_read, 'r') as csvfile:
         # remover caracteres nao alfabeticos
         if len(row):
             start_time = time.time()
-            word = re.sub('[^A-Z]+', '', row[0])
+            word = re.sub('[^A-Z]', '', row[0])
             if len(word) > 1:
                 # passa as novas palavras para dicionario
                 new_dict[word] = ast.literal_eval(row[1])
