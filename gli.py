@@ -11,13 +11,13 @@ import time
 import logging
 import configparser
 import xml.etree.ElementTree as ET
-import re
+#import re
 import csv
 from unidecode import unidecode
 import nltk
 #nltk.download('all')
 
-logging.basicConfig(filename='module.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
+#logging.basicConfig(filename='module.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
 #logging.basicConfig(filename='example.log', level=logging.DEBUG)
 logging.info('Modulo de geração de lista invertida iniciado')
 
@@ -50,10 +50,9 @@ for i in range(len(files_read)):
             num = int(el.find('RECORDNUM').text)
             #recordnums.append(num)
             abstract = str(el.find('ABSTRACT').text).upper() if el.find('ABSTRACT') is not None else str(el.find('EXTRACT').text).upper()
-            # tratamento inicial
-            # tratar casos como U.S.A, C.F
-            # 42.000, 12,09, etc
-            abstract = re.sub('[();,%]', ' ', unidecode(abstract)) # unidecode remove acentos
+            # remove ; para evitar conflito com delimitador
+            #abstract = re.sub(';', ' ', unidecode(abstract)) # unidecode remove acentos
+            abstract = unidecode(abstract)
             #abstracts.append(abstract)
             tokenized = nltk.word_tokenize(abstract)
             #abstracts_tokenized.append(tokenized)
