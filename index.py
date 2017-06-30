@@ -26,35 +26,37 @@ logging.info('Leitura do arquivo de configuração')
 logging.info('Iniciando processo de indexação dos dados')
 
 words_dict = {}
-documents_dict = {}
 words_count = 0
-documents_count = 0
 new_dict = {}
 
 total_time = 0
+total_documents = 0
 
 with open(files_read, 'r') as csvfile:
     logging.info('Leitura do arquivo de dados '+str(files_read))
     reader = csv.reader(csvfile, delimiter=';')
     for row in reader:
-        # remover caracteres nao alfabeticos
+        # remover caracteres que nao sao do alfabeto
         if len(row):
             start_time = time.time()
+            #print(ast.literal_eval(row[1]))
             word = re.sub('[^A-Z]', '', row[0])
             if len(word) > 1:
                 # passa as novas palavras para dicionario
-                new_dict[word] = ast.literal_eval(row[1])
+                # se existe agrupa os valores
+                row1 = ast.literal_eval(row[1])
+                if word in new_dict:
+                    new_dict[word].extend(row1)
+                else:
+                    new_dict[word] = row1
                 if word not in words_dict:
                     words_dict[word] = words_count
                     words_count = words_count + 1
-                for doc in new_dict[word]:
-                    if str(doc) not in documents_dict:
-                        documents_dict[str(doc)] = documents_count
-                        documents_count = documents_count + 1
+                for key in new_dict[word]:
+                    total_documents = int(max(total_documents, int(key)))
             total_time = total_time + time.time() - start_time
                       
 total_words = len(words_dict)
-total_documents = len(documents_dict)
 
 logging.info('Finalizado processo de leitura dos arquivos de dados')
 logging.info('Tempo total de processamento: '+str(total_time)+' segundos')
@@ -75,8 +77,7 @@ for key, value in new_dict.items():
     idf = math.log(d/df) # calculo do idf
     word_id = words_dict[key]
     for i, tf in tf_dict.items():
-        document_id = documents_dict[str(i)]
-        #matrix[word_id][document_id] = tf * idf # calculo de if idf
+        document_id = i
         matrix[word_id][document_id] = tf * idf # calculo de if idf
 
 logging.info('Atribuição de pesos finalizado')
@@ -87,7 +88,6 @@ to_save = []
 with open(file_write, 'w') as csv_file:
     writer = csv.writer(csv_file, delimiter=';')
     to_save.append(['TOKENS', str(words_dict)])
-    to_save.append(['DOCUMENTS', str(documents_dict)])
     to_save.append(['MODEL', str(matrix)])
     writer.writerows(to_save)
 logging.info('Arquivo de indexação salvo')
