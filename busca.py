@@ -14,10 +14,23 @@ import xml.etree.ElementTree as ET
 import re
 import csv
 import ast
-#import math
+import math
 from unidecode import unidecode
 import nltk
 from sklearn.metrics.pairwise import cosine_similarity
+
+# função para calcular cosine similarity
+def cos_sim(A, B):
+    num = 0
+    A_den = 0
+    B_den = 0
+    for word_id, value in A.items():
+        if word_id in B:
+            num = num + value * B[word_id]
+        A_den = A_den + value**2
+    for word_id, value in B.items():
+        B_den = B_den + value**2
+    return (1.0*num)/(math.sqrt(A_den)*math.sqrt(B_den))
 
 logging.info('Modulo de busca iniciado')
 
@@ -39,12 +52,8 @@ with open(file_model, 'r') as csvfile:
             elif row[0] == 'MODEL':
                 matrix_word_doc = ast.literal_eval(row[1])
 
-xml = ET.parse(file_query)
-logging.info('Leitura do arquivo de consultas '+str(file_query))
-root = xml.getroot()
-
 total_words = len(words_dict)
-#total_documents = 0
+total_documents = 0
 
 # matrix esparca doc word
 dict_doc_word = {}
@@ -53,7 +62,7 @@ for word_id in range(len(matrix_word_doc)):
         if document_id not in dict_doc_word:
             dict_doc_word[document_id] = {}
         dict_doc_word[document_id][word_id] = f
-        #total_documents = int(max(total_documents, document_id))
+        total_documents = int(max(total_documents, document_id))
 
 # matrix esparca doc word
 #for i in range(len(matrix_word_doc)):
@@ -68,21 +77,25 @@ for word_id in range(len(matrix_word_doc)):
 # transpoe a matrix em documentos x termos
 #t_matrix = [list(i) for i in zip(*matrix)]
 
+xml = ET.parse(file_query)
+logging.info('Leitura do arquivo de consultas '+str(file_query))
+root = xml.getroot()
+
+to_save = []
 for el in root.findall('QUERY'):
     num = int(el.find('QueryNumber').text)
-    print('para consulta' + str(num))
     text = str(el.find('QueryText').text).upper()
     abstract = unidecode(text)
     tokenized = nltk.word_tokenize(abstract)
     tokens = {}
-    print(tokenized)
     # obtem tokens da query
     for token in tokenized:
         word = re.sub('[^A-Z]', '', token)
         if len(word) > 1:
             tokens[word] = 1
     # cria o vetor da query
-    query_vec = [0 for x in range(total_words)]
+    #query_vec = [0 for x in range(total_words)]
+    query_vec = {}
     # atribui pesos no vetor
     for key in tokens:
         # palavras na consulta podem nao ter sido indexadas
@@ -92,13 +105,27 @@ for el in root.findall('QUERY'):
     for doc_id, value in dict_doc_word.items():
         doc = doc_id
         # cria o vetor do documento
-        doc_vec = [0 for x in range(total_words)]
-        for word_key, word_f in dict_doc_word[doc].items():
-            doc_vec[word_key] = word_f
-        sim = cosine_similarity([query_vec], [doc_vec])
+        #doc_vec = [0 for x in range(total_words)]
+        #for word_key, word_f in dict_doc_word[doc].items():
+        #    doc_vec[word_key] = word_f
+        doc_vec = dict_doc_word[doc]
+        #sim = cosine_similarity([query_vec], [doc_vec])
+        sim = cos_sim(query_vec, doc_vec)
         #print(key + ' ' + str(sim)) #if sim > 0.7071:
-        results.append([doc_id, sim[0][0]])
+        #results.append([doc_id, sim[0][0]])
+        results.append([doc_id, sim])
     results.sort(key=lambda x: x[1], reverse=True)
-    print(results[:100])
-    break
-            
+    results = results[:50]
+    to_res = []
+    for i in range(len(results)):
+        res = [(i+1)]
+        res.extend(results[i])
+        to_res.append(res)
+    to_save.append([num, to_res])
+
+logging.info('Salvando arquivo de resultado de bysca')
+# salvando dict de tokens, dict de documents e matriz em arquivo
+with open(file_result, 'w') as csv_file:
+    writer = csv.writer(csv_file, delimiter=';')
+    writer.writerows(to_save)
+logging.info('Arquivo de busca salvo')

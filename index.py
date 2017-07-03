@@ -82,7 +82,7 @@ for key, value in new_dict.items():
 
 logging.info('Atribuição de pesos finalizado')
               
-logging.info('Salvando arquivo de redultado de indexação')
+logging.info('Salvando arquivo de resultado de indexação')
 # salvando dict de tokens, dict de documents e matriz em arquivo
 to_save = []
 with open(file_write, 'w') as csv_file:
