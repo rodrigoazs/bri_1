@@ -7,7 +7,7 @@ Created on Thu Jun 29 17:34:55 2017
 Modulo de buscador
 """
 
-#import time
+import time
 import logging
 import configparser
 import xml.etree.ElementTree as ET
@@ -53,7 +53,7 @@ with open(file_model, 'r') as csvfile:
                 matrix_word_doc = ast.literal_eval(row[1])
 
 total_words = len(words_dict)
-total_documents = 0
+#total_documents = 0
 
 # matrix esparca doc word
 dict_doc_word = {}
@@ -62,7 +62,7 @@ for word_id in range(len(matrix_word_doc)):
         if document_id not in dict_doc_word:
             dict_doc_word[document_id] = {}
         dict_doc_word[document_id][word_id] = f
-        total_documents = int(max(total_documents, document_id))
+        #total_documents = int(max(total_documents, document_id))
 
 # matrix esparca doc word
 #for i in range(len(matrix_word_doc)):
@@ -81,8 +81,12 @@ xml = ET.parse(file_query)
 logging.info('Leitura do arquivo de consultas '+str(file_query))
 root = xml.getroot()
 
+total_time = 0
+total_query = 0
 to_save = []
 for el in root.findall('QUERY'):
+    start_time = time.time()
+    total_query = total_query + 1
     num = int(el.find('QueryNumber').text)
     text = str(el.find('QueryText').text).upper()
     abstract = unidecode(text)
@@ -115,15 +119,20 @@ for el in root.findall('QUERY'):
         #results.append([doc_id, sim[0][0]])
         results.append([doc_id, sim])
     results.sort(key=lambda x: x[1], reverse=True)
-    results = results[:50]
+    results = results[:100]
     to_res = []
     for i in range(len(results)):
         res = [(i+1)]
         res.extend(results[i])
         to_res.append(res)
     to_save.append([num, to_res])
+    total_time = total_time + time.time() - start_time
 
-logging.info('Salvando arquivo de resultado de bysca')
+logging.info('Finalizado processo de busca')
+logging.info('Tempo total de processamento: '+str(total_time)+' segundos')
+logging.info('Processamento médio por consulta: '+str(total_time/total_query)+' segundos')
+
+logging.info('Salvando arquivo de resultado de busca')
 # salvando dict de tokens, dict de documents e matriz em arquivo
 with open(file_result, 'w') as csv_file:
     writer = csv.writer(csv_file, delimiter=';')
