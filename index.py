@@ -63,6 +63,12 @@ logging.info('Tempo total de processamento: '+str(total_time)+' segundos')
 logging.info('Número total de tokens unicos: '+str(total_words))
 logging.info('Processamento médio por tokens: '+str(total_time/total_words)+' segundos')
 
+# conta numero de termos em cada documento
+#tot = []
+#for key, value in new_dict.items():
+#    tot.extend(value)
+#tdf = dict([(i, tot.count(i)) for i in set(tot)])
+
 # cria a matrix do modelo vetorial termos x documentos
 #matrix = [[0 for x in range(total_documents)] for x in range(total_words)]
 # matriz ocupando muita memoria
