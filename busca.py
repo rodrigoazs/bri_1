@@ -50,18 +50,18 @@ with open(file_model, 'r') as csvfile:
             if row[0] == 'TOKENS':
                 words_dict = ast.literal_eval(row[1])
             elif row[0] == 'MODEL':
-                matrix_word_doc = ast.literal_eval(row[1])
+                dict_doc_word = ast.literal_eval(row[1])
 
 total_words = len(words_dict)
 #total_documents = 0
 
 # matrix esparca doc word
-dict_doc_word = {}
-for word_id in range(len(matrix_word_doc)):
-    for document_id, f in matrix_word_doc[word_id].items():
-        if document_id not in dict_doc_word:
-            dict_doc_word[document_id] = {}
-        dict_doc_word[document_id][word_id] = f
+#dict_doc_word = {}
+#for word_id in range(len(matrix_word_doc)):
+#    for document_id, f in matrix_word_doc[word_id].items():
+#        if document_id not in dict_doc_word:
+#            dict_doc_word[document_id] = {}
+#        dict_doc_word[document_id][word_id] = f
         #total_documents = int(max(total_documents, document_id))
 
 # matrix esparca doc word
@@ -104,7 +104,7 @@ for el in root.findall('QUERY'):
     for key in tokens:
         # palavras na consulta podem nao ter sido indexadas
         if key in words_dict:
-            query_vec[words_dict[key]] = 1
+            query_vec[words_dict[key]] = 1.0
     results = []
     for doc_id, value in dict_doc_word.items():
         doc = doc_id

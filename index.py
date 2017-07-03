@@ -72,19 +72,31 @@ logging.info('Processamento médio por tokens: '+str(total_time/total_words)+' s
 # cria a matrix do modelo vetorial termos x documentos
 #matrix = [[0 for x in range(total_documents)] for x in range(total_words)]
 # matriz ocupando muita memoria
-matrix = [{} for x in range(total_words)]
+#matrix = [{} for x in range(total_documents)]
+dict_doc_word = {}
 
 logging.info('Atribuindo pesos tfidf a matriz')
 # preenche a matrix com tf/idf
 for key, value in new_dict.items():
     tf_dict = dict([(i, value.count(i)) for i in set(value)])
-    d = total_documents
+    nd = total_documents
     df = len(tf_dict)*1.0
-    idf = math.log(d/df) # calculo do idf
+    idf = math.log((1.0+nd)/(1.0+df)) + 1 # calculo do idf
     word_id = words_dict[key]
     for i, tf in tf_dict.items():
         document_id = i
-        matrix[word_id][document_id] = tf * idf # calculo de if idf
+        if document_id not in dict_doc_word:
+            dict_doc_word[document_id] = {}
+        dict_doc_word[document_id][word_id] = tf * idf # calculo de tf idf
+        
+# l2-normalization
+for doc_id, words_value in dict_doc_word.items():
+    s = 0
+    for word_id, value in dict_doc_word[doc_id].items():
+        s = s + value**2
+    s = math.sqrt(s)
+    for word_id, value in dict_doc_word[doc_id].items():
+        dict_doc_word[doc_id][word_id] = value / (s * 1.0)
 
 logging.info('Atribuição de pesos finalizado')
               
@@ -94,6 +106,6 @@ to_save = []
 with open(file_write, 'w') as csv_file:
     writer = csv.writer(csv_file, delimiter=';')
     to_save.append(['TOKENS', str(words_dict)])
-    to_save.append(['MODEL', str(matrix)])
+    to_save.append(['MODEL', str(dict_doc_word)])
     writer.writerows(to_save)
 logging.info('Arquivo de indexação salvo')
