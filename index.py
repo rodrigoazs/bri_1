@@ -107,5 +107,6 @@ with open(file_write, 'w') as csv_file:
     writer = csv.writer(csv_file, delimiter=';')
     to_save.append(['TOKENS', str(words_dict)])
     to_save.append(['MODEL', str(dict_doc_word)])
+    to_save.append(['REVERSE', str(new_dict)])
     writer.writerows(to_save)
 logging.info('Arquivo de indexação salvo')

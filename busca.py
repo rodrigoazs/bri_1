@@ -51,9 +51,14 @@ with open(file_model, 'r') as csvfile:
                 words_dict = ast.literal_eval(row[1])
             elif row[0] == 'MODEL':
                 dict_doc_word = ast.literal_eval(row[1])
+            elif row[0] == 'REVERSE':
+                new_dict = ast.literal_eval(row[1])
 
 total_words = len(words_dict)
-#total_documents = 0
+total_documents = 0
+
+for document_id in dict_doc_word:
+    total_documents = int(max(total_documents, document_id))
 
 # matrix esparca doc word
 #dict_doc_word = {}
@@ -76,6 +81,10 @@ total_words = len(words_dict)
 
 # transpoe a matrix em documentos x termos
 #t_matrix = [list(i) for i in zip(*matrix)]
+
+tf_dict = {}
+for key, value in new_dict.items():
+    tf_dict[key] = len(dict([(i, value.count(i)) for i in set(value)]))
 
 xml = ET.parse(file_query)
 logging.info('Leitura do arquivo de consultas '+str(file_query))
@@ -104,7 +113,18 @@ for el in root.findall('QUERY'):
     for key in tokens:
         # palavras na consulta podem nao ter sido indexadas
         if key in words_dict:
-            query_vec[words_dict[key]] = 1.0
+            nd = total_documents
+            df = tf_dict[key]*1.0
+            idf = math.log((1.0+nd)/(1.0+df)) + 1 # calculo do idf
+            tf = tokens[key]
+            query_vec[words_dict[key]] = tf * idf
+    # l2 normalization
+    s = 0
+    for key, value in query_vec.items():
+        s = s + value**2
+    s = math.sqrt(s)
+    for key, value in query_vec.items():
+        query_vec[key] = value / (s * 1.0)
     results = []
     for doc_id, value in dict_doc_word.items():
         doc = doc_id
