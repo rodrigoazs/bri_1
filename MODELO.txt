@@ -1,0 +1,15 @@
+O modelo é um arquivo no formato csv com a seguinte informação:
+
+TOKENS;{...}
+MODEL;{...}
+REVERSE;{...}
+
+O campo TOKENS possui um dicionário com os ids de cada token. Exemplo:
+TOKENS;{'THE': 0, 'SIGNIFICANCE': 1, 'OF': 2, 'PSEUDOMONAS': 3, 'AERUGINOSA': 4, ...}
+
+O campo MODEL possui a sparse matrix (em dicionário) dos documentos x termos. Exemplo:
+MODEL;{1: {0: 0.29812451409951146, 1: 0.06905266896986094, 2: 0.20734414847820484, ...}, ...}
+Os pesos já estão calculados com tf-idf e normalizados conforme implementado no indexador.
+
+O campo REVERSE possui a lista inversa como proposto pelo GLI. Exemplo:
+REVERSE;{'THE': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...], ...}
