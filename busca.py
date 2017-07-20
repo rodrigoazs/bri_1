@@ -18,6 +18,7 @@ import math
 from unidecode import unidecode
 import nltk
 from sklearn.metrics.pairwise import cosine_similarity
+from nltk.stem.porter import PorterStemmer
 
 # função para calcular cosine similarity
 def cos_sim(A, B):
@@ -32,7 +33,7 @@ def cos_sim(A, B):
         B_den = B_den + value**2
     return (1.0*num)/(math.sqrt(A_den)*math.sqrt(B_den))
 
-def run():
+def run(EnablePorterStemmer = False):
     logging.info('Modulo de busca iniciado')
     
     config = configparser.ConfigParser()
@@ -101,6 +102,11 @@ def run():
         text = str(el.find('QueryText').text).upper()
         abstract = unidecode(text)
         tokenized = nltk.word_tokenize(abstract)
+        if EnablePorterStemmer == True:
+            stemmer = PorterStemmer()
+            stemmed = [stemmer.stem(token) for token in tokenized]
+            abstract = (' '.join(stemmed)).upper()
+            tokenized = nltk.word_tokenize(abstract)
         tokens = {}
         # obtem tokens da query
         for token in tokenized:

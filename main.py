@@ -13,9 +13,9 @@ import pc
     
 def main():
     logging.basicConfig(filename='module.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.INFO)
-    gli.run()
+    gli.run(EnablePorterStemmer = True)
     index.run()
-    busca.run()
+    busca.run(EnablePorterStemmer = True)
     pc.run()
 
 if __name__ == "__main__":

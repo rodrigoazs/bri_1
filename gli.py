@@ -15,9 +15,10 @@ import xml.etree.ElementTree as ET
 import csv
 from unidecode import unidecode
 import nltk
+from nltk.stem.porter import PorterStemmer
 #nltk.download('all')
 
-def run():
+def run(EnablePorterStemmer = False):
     #logging.basicConfig(filename='module.log', format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     #logging.basicConfig(filename='example.log', level=logging.DEBUG)
     logging.info('Modulo de geração de lista invertida iniciado')
@@ -56,6 +57,11 @@ def run():
                 abstract = unidecode(abstract)
                 #abstracts.append(abstract)
                 tokenized = nltk.word_tokenize(abstract)
+                if EnablePorterStemmer == True:
+                    stemmer = PorterStemmer()
+                    stemmed = [stemmer.stem(token) for token in tokenized]
+                    abstract = (' '.join(stemmed)).upper()
+                    tokenized = nltk.word_tokenize(abstract)
                 #abstracts_tokenized.append(tokenized)
                 for i in range(len(tokenized)):
                     if tokenized[i] in tokens:
