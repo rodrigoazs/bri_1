@@ -17,10 +17,8 @@ import matplotlib.pyplot as plt
 
 files_read = '../results_porter/esperados.csv'
 #esperados = []
-relevantes = [[] for i in range(101)]
-recuperados = {'porter' : [[] for i in range(101)], 'no_porter': [[] for i in range(101)]}
-precision = {'porter' : [None for i in range(101)], 'no_porter': [None for i in range(101)]}
-recall = {'porter' : [None for i in range(101)], 'no_porter': [None for i in range(101)]}
+relevants = {}
+retrieveds = {'porter' : {}, 'no_porter': {}}
 
 with open(files_read, 'r') as csvfile:
     reader = csv.reader(csvfile, delimiter=';')
@@ -28,7 +26,10 @@ with open(files_read, 'r') as csvfile:
         if len(row):
             #esperados.append({'QueryNumber': row[0], 'DocNumber': row[1], 'DocVotes': row[2]})
             try:
-                relevantes[int(row[0])].append(int(row[1]))
+                if int(row[0]) in relevants:
+                    relevants[int(row[0])].append(int(row[1]))
+                else:
+                    relevants[int(row[0])] = [int(row[1])]
             except:
                 pass
         
@@ -42,50 +43,28 @@ for tp in ['porter', 'no_porter']:
                     rec = []
                     row1 = ast.literal_eval(row[1])
                     for r in row1:
-                        if r[2] > 0.1: # documents with cos_sim greater than 0.1 are considered relevant
-                            rec.append(r[1])
-                        #rec.append(r[1]) # returns always 100 documents
-                    recuperados[tp][int(row[0])] = rec
+                        rec.append(r[1]) # returns all of them
+                    retrieveds[tp][int(row[0])] = rec
                 except:
                     pass
                 
+n_queries = len(relevants)
+n_documents = len(retrieveds['porter'][1])
+
+precisions = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+recalls = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))} 
+                
 for tp in ['porter', 'no_porter']:
-    for i in range(1, 101):
-        rel = set(relevantes[i])
-        rec = set(recuperados[tp][i])
-        rel_rec = len(rel.intersection(rec))
-        total_rel = len(rel)
-        total_rec = len(rec)
-        try:
-            precision[tp][i] = rel_rec / (1.0*total_rec)
-            recall[tp][i] = rel_rec / (1.0*total_rel)
-        except:
-            # query number 93 does not exist
-            pass
-
-#s = 0.0
-#for i in precision['no_porter']:
-#    if i is not None:
-#        s += i       
-#print(s/100.0)
-X = []
-y = []
-for i in recall['no_porter']:
-    if i is not None:
-        X.append(i)
-for i in precision['no_porter']:
-    if i is not None:
-        y.append(i)
-
-X = sorted(X)
-y = sorted(y, reverse=True)
-# Plot Precision-Recall curve
-plt.clf()
-plt.plot(X, y, lw=2, color='navy', label='Precision-Recall curve')
-plt.xlabel('Recall')
-plt.ylabel('Precision')
-plt.ylim([0.0, 1.05])
-plt.xlim([0.0, 1.0])
-#plt.title('Precision-Recall example: AUC={0:0.2f}'.format(average_precision[0]))
-plt.legend(loc="lower left")
-plt.show()
+    m = 0
+    for key, value in retrieveds[tp].items():
+        if(m < 5):
+            print(key)
+        rel = len(relevants[key])
+        rel_retrieved = 0
+        for k in range(len(value)):
+            if value[k] in relevants[key]:
+                rel_retrieved += 1
+            precisions[m][k] = rel_retrieved / (1.0*(k + 1))
+            recalls[m][k] = rel_retrieved / (1.0*rel)
+        m += 1
+                
