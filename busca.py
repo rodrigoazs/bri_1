@@ -146,7 +146,7 @@ def run(EnablePorterStemmer = False):
             #results.append([doc_id, sim[0][0]])
             results.append([doc_id, sim])
         results.sort(key=lambda x: x[1], reverse=True)
-        results = results[:100]
+        #results = results[:100]
         to_res = []
         for i in range(len(results)):
             res = [(i+1)]
