@@ -112,7 +112,7 @@ for model in models:
 #    interpolated_prec_recs[model] = interpolated_precision_recall
 
 # plot 11 interpolated precision recall curve
-rec_x = np.arange(0, 1.1, 0.1) # the x locations for the groups
+rec_x = np.arange(0, 1.1, 0.1)
 
 for model in models:
     label = 'Com Porter Stemming' if model == 'porter' else 'Sem Porter Stemming'
@@ -124,6 +124,17 @@ plt.xlabel('Recall')
 plt.ylabel('Precision')
 plt.title("Curva de Precision-Recall interpolado em 11 níveis")
 plt.legend(loc='upper right')
-
-plt.subplots_adjust(bottom=0.2)
 plt.show()
+
+# plot table
+cell_0 = np.array(['%1.4f' % (x) for x in rec_x])
+cell_1 = np.array(['%1.4f' % (x) for x in interpolated_prec_recs[models[0]]])
+cell_2 = np.array(['%1.4f' % (x) for x in interpolated_prec_recs[models[1]]])
+cell_text = np.column_stack((cell_0, cell_1, cell_2))
+fig, ax = plt.subplots()
+# Hide axes
+ax.xaxis.set_visible(False) 
+ax.yaxis.set_visible(False)
+# Table from Ed Smith answer
+collabel=('Recall', 'Precision '+ models[0], 'Precision '+ models[1])
+ax.table(cellText=cell_text, colLabels=collabel, loc='center')
