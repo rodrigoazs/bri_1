@@ -17,12 +17,12 @@ import matplotlib.pyplot as plt
 
 #autolabel from
 #http://composition.al/blog/2015/11/29/a-better-way-to-add-labels-to-bar-charts-with-matplotlib/
-def autolabel(rects):
+def autolabel(rects, mes):
     # attach some text labels
     for rect in rects:
         height = rect.get_height()
         plt.text(rect.get_x() + rect.get_width()/2., 1.05*height,
-                '%.3f' % float(height),
+                '%.3f%s' % (float(height), mes),
                 ha='center', va='bottom')
 
 files_read = '../results_porter/esperados.csv'
@@ -184,7 +184,7 @@ for model in models:
 
 # MAP plot
 ind = np.arange(len(models))    # the x locations for the groups
-width = 0.15       # the width of the bars: can also be len(x) 
+width = 0.35       # the width of the bars: can also be len(x) 
 map_p = np.array([maps[models[0]], maps[models[1]]]) * 100
 
 rect = plt.bar(ind, map_p, width, align='center')
