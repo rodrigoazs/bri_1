@@ -14,6 +14,7 @@ import ast
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 #autolabel from
 #http://composition.al/blog/2015/11/29/a-better-way-to-add-labels-to-bar-charts-with-matplotlib/
@@ -194,3 +195,98 @@ plt.xticks(ind, ('Com Porter Stemming', 'Sem Porter Stemming'))
 autolabel(rect, '%')
 plt.yticks(np.arange(0, 11, 1))
 plt.show()
+
+# p@10 e p@5
+pat10 =  {'porter' : 0.0, 'no_porter': 0.0}
+pat5 =  {'porter' : 0.0, 'no_porter': 0.0}
+for model in models:
+    pat10[model] = np.mean(precisions[model][:, 9])
+    pat5[model] = np.mean(precisions[model][:, 4])
+    
+# p@10 e p@5 plot
+ind = np.arange(len(models))    # the x locations for the groups
+width = 0.35       # the width of the bars: can also be len(x) 
+pat_p = np.array([pat10[models[0]], pat10[models[1]]]) * 100
+
+rect = plt.bar(ind, pat_p, width, align='center')
+plt.ylabel('P@10 médio (%)')
+plt.title('Precision at 10')
+plt.xticks(ind, ('Com Porter Stemming', 'Sem Porter Stemming'))
+autolabel(rect, '%')
+plt.yticks(np.arange(0, 61, 5))
+plt.show()
+
+ind = np.arange(len(models))    # the x locations for the groups
+width = 0.35       # the width of the bars: can also be len(x) 
+pat_p = np.array([pat5[models[0]], pat5[models[1]]]) * 100
+
+rect = plt.bar(ind, pat_p, width, align='center')
+plt.ylabel('P@5 médio (%)')
+plt.title('Precision at 5')
+plt.xticks(ind, ('Com Porter Stemming', 'Sem Porter Stemming'))
+autolabel(rect, '%')
+plt.yticks(np.arange(0, 71, 5))
+plt.show()
+
+# mean reciprocal rank
+mrr = {'porter' : np.zeros((n_queries)), 'no_porter': np.zeros((n_queries))}
+   
+for model in models:
+    m = 0
+    for key, value in retrieveds[model].items():
+        for k in range(len(value)):
+            if value[k] in relevants[key]:
+                mrr[model][m] = 1.0 / (k + 1)
+                break
+        m += 1
+    mrr[model] = np.mean(mrr[model])
+    
+# plot mean reciprocal rank
+ind = np.arange(len(models))    # the x locations for the groups
+width = 0.35       # the width of the bars: can also be len(x) 
+mrr_p = np.array([mrr[models[0]], mrr[models[1]]]) * 100
+
+rect = plt.bar(ind, mrr_p, width, align='center')
+plt.ylabel('MRR (%)')
+plt.title('Mean Reciprocal Rank')
+plt.xticks(ind, ('Com Porter Stemming', 'Sem Porter Stemming'))
+autolabel(rect, '%')
+plt.yticks(np.arange(0, 91, 10))
+plt.show()
+
+# RP A/B
+r_precisions = {'porter' : np.zeros((n_queries)), 'no_porter': np.zeros((n_queries))}
+
+for model in models:
+    ret = list(retrieveds['porter'])
+    for i in range(len(ret)):
+        query_id = ret[i]
+        rel_q = relevants[query_id]
+        n_rel_q = len(rel_q)
+        ret_q = retrieveds[model][query_id][:n_rel_q]
+        r = set(ret_q).intersection(set(rel_q))
+        r_precisions[model][i] = len(r) / (1.0 * n_rel_q)
+        
+# porter - no_porter
+r_precisions_a_b = r_precisions['porter'] - r_precisions['no_porter']
+        
+# plot RP A/B
+for n_start in range(0, 100, 20):
+    if n_start + n_q > n_queries:
+        n_q = n_queries - n_start
+    else:
+        n_q = 20
+    ind = np.arange(n_q)    # the x locations for the groups
+    x_st = (list(retrieveds['porter']))[n_start:(n_start+n_q)]
+    width = 0.35       # the width of the bars: can also be len(x) 
+    
+    a_patch = mpatches.Patch(label='A: Com Porter Stemming')
+    b_patch = mpatches.Patch(label='B: Sem Porter Stemming')
+    plt.legend(handles=[a_patch, b_patch])
+    plt.gca().yaxis.grid()
+    rect = plt.bar(ind, r_precisions_a_b[n_start:(n_start+n_q)], width, align='center')
+    plt.ylabel('R-Precision A/B')
+    plt.title('R-Precision A/B por Query Number')
+    plt.xticks(ind, x_st)
+    plt.yticks(np.arange(-0.4, 0.5, 0.1))
+    plt.show()
