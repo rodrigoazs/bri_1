@@ -30,6 +30,7 @@ files_read = '../results_porter/esperados.csv'
 models = ['porter', 'no_porter']
 #esperados = []
 relevants = {}
+relevances = {}
 retrieveds = {'porter' : {}, 'no_porter': {}}
 
 # ==============================================================
@@ -43,6 +44,9 @@ with open(files_read, 'r') as csvfile:
                     relevants[int(row[0])].append(int(row[1]))
                 else:
                     relevants[int(row[0])] = [int(row[1])]
+                if int(row[0]) not in relevances:
+                    relevances[int(row[0])] = {}
+                relevances[int(row[0])][int(row[1])] = int(row[2])
             except:
                 pass
 
@@ -272,10 +276,9 @@ r_precisions_a_b = r_precisions['porter'] - r_precisions['no_porter']
         
 # plot RP A/B
 for n_start in range(0, 100, 20):
+    n_q = 20
     if n_start + n_q > n_queries:
         n_q = n_queries - n_start
-    else:
-        n_q = 20
     ind = np.arange(n_q)    # the x locations for the groups
     x_st = (list(retrieveds['porter']))[n_start:(n_start+n_q)]
     width = 0.35       # the width of the bars: can also be len(x) 
@@ -290,3 +293,55 @@ for n_start in range(0, 100, 20):
     plt.xticks(ind, x_st)
     plt.yticks(np.arange(-0.4, 0.5, 0.1))
     plt.show()
+    
+# normalized DCG
+#n_dcg = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+#g = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+#
+#for model in models:
+#    m = 0
+#    for key, value in retrieveds[model].items():
+#        for i in range(len(value)):
+#            if value[i] in relevances[key]:
+#                g[model][m][i] = relevances[key][value[i]]
+#        m += 1
+
+ndcg = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+dcg = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+idcg = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+
+for model in models:
+    m = 0
+    for key, value in retrieveds[model].items():
+        # calcula cdg
+        for i in range(len(value)):
+            cg_last = 0.0 if i == 0 else dcg[model][m][i-1]
+            d_log2 = np.log2(i + 1) if (i + 1) > 1 else 1.0
+            g = relevances[key][value[i]] if value[i] in relevances[key] else 0.0
+            dcg[model][m][i] = g/d_log2 + cg_last
+        # calcula idcg
+        isort = sorted([value for key, value in relevances[key].items()], reverse=True)
+        for i in range(n_documents):
+            icg_last = 0.0 if i == 0 else idcg[model][m][i-1]
+            d_log2 = np.log2(i + 1) if (i + 1) > 1 else 1.0
+            ig = isort[i] if i < len(isort) else 0.0
+            idcg[model][m][i] = ig/d_log2 + icg_last
+        m += 1
+    dcg[model] = np.mean(dcg[model], axis = 0)
+    idcg[model] = np.mean(idcg[model], axis = 0)
+    ndcg[model] = dcg[model] / idcg[model]
+    
+# plot ndcg
+rec_x = np.arange(1, n_documents+1)
+
+for model in models:
+    label = 'Com Porter Stemming' if model == 'porter' else 'Sem Porter Stemming'
+    plt.plot(rec_x, ndcg[model], label=label)
+
+plt.xlim([1, n_documents+1])
+plt.ylim([0.0, 1.05])
+plt.xlabel('n')
+plt.ylabel('Normalized DCG')
+plt.title("Normalized Discounted Cumulative Gain em n documentos")
+plt.legend(loc='upper right')
+plt.show()
