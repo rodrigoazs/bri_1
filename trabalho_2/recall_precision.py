@@ -262,7 +262,7 @@ plt.show()
 r_precisions = {'porter' : np.zeros((n_queries)), 'no_porter': np.zeros((n_queries))}
 
 for model in models:
-    ret = list(retrieveds['porter'])
+    ret = list(retrieveds[model])
     for i in range(len(ret)):
         query_id = ret[i]
         rel_q = relevants[query_id]
@@ -344,4 +344,39 @@ plt.xlabel('n')
 plt.ylabel('Normalized DCG')
 plt.title("Normalized Discounted Cumulative Gain em n documentos")
 plt.legend(loc='upper right')
+plt.show()
+
+# BPREF
+bpref = {'porter' : np.zeros((n_queries, n_documents)), 'no_porter': np.zeros((n_queries, n_documents))}
+
+for model in models:
+    ret = list(retrieveds['porter'])
+    for i in range(len(ret)):
+        query_id = ret[i]
+        rel_q = relevants[query_id]
+        n_rel_q = len(rel_q)
+        ret_q = retrieveds[model][query_id]
+        non_relevant_count = 0
+        last = 0
+        for j in range(len(ret_q)):
+            if ret_q[j] in rel_q:
+                last += 1.0/n_rel_q * (1-non_relevant_count/(1.0*n_rel_q))
+            else:
+                non_relevant_count += 1
+            bpref[model][i][j] = last
+    bpref[model] = np.mean(bpref[model], axis = 0)
+    
+# plot BPREF
+rec_x = np.arange(1, n_documents+1)
+
+for model in models:
+    label = 'Com Porter Stemming' if model == 'porter' else 'Sem Porter Stemming'
+    plt.plot(rec_x, bpref[model], label=label)
+
+plt.xlim([1, n_documents+1])
+plt.ylim([0.0, 1.05])
+plt.xlabel('n')
+plt.ylabel('BPREF')
+plt.title("BPREF em n documentos retornados")
+plt.legend(loc='lower right')
 plt.show()
