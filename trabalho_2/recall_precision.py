@@ -2,16 +2,10 @@
 """
 Created on Thu Jul 20 14:57:19 2017
 
-@author: 317005
+@author: Rodrigo Azevedo
 """
-import time
-import logging
-import configparser
-import xml.etree.ElementTree as ET
-import re
 import csv
 import ast
-import math
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
