@@ -374,7 +374,7 @@ for model in models:
     plt.plot(rec_x, bpref[model], label=label)
 
 plt.xlim([1, n_documents+1])
-plt.ylim([0.0, 1.05])
+plt.ylim([-15.0, 1.05])
 plt.xlabel('n')
 plt.ylabel('BPREF')
 plt.title("BPREF em n documentos retornados")
